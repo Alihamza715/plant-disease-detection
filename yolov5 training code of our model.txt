@@ -1,0 +1,87 @@
+Below are the code our YOLOv5 pytorch model:
+
+# clone YOLOv5 repository
+!git clone https://github.com/ultralytics/yolov5  # clone repo
+%cd yolov5
+!git reset --hard 064365d8683fd002e9ad789c1e91fa3d021b44f0
+
+# install dependencies as necessary
+!pip install -qr requirements.txt  # install dependencies (ignore errors)
+import torch
+
+from IPython.display import Image, clear_output  # to display images
+from utils.downloads import attempt_download  # to download models/datasets
+
+# clear_output()
+print('Setup complete. Using torch %s %s' % (torch.__version__, torch.cuda.get_device_properties(0) if torch.cuda.is_available() else 'CPU'))
+
+#follow the link below to get your download code from from Roboflow
+!pip install -q roboflow
+from roboflow import Roboflow
+rf = Roboflow(model_format="yolov5", notebook="roboflow-yolov5")
+
+%cd /content/yolov5
+#after following the link above, recieve python code with these fields filled in
+from roboflow import Roboflow
+rf = Roboflow(api_key="oEC9nnKiB7Ic1dP14V0N")
+project = rf.workspace("amir-1astd").project("amir-fyp")
+dataset = project.version(2).download("yolov5")
+
+# this is the YAML file Roboflow wrote for us that we're loading into this notebook with our data
+%cat {dataset.location}/data.yaml
+
+# define number of classes based on YAML
+import yaml
+with open(dataset.location + "/data.yaml", 'r') as stream:
+    num_classes = str(yaml.safe_load(stream)['nc'])
+
+#this is the model configuration we will use for our tutorial 
+%cat /content/yolov5/models/yolov5s.yaml
+
+%%writetemplate /content/yolov5/models/custom_yolov5s.yaml
+
+# train yolov5s on custom data for 100 epochs
+# time its performance
+%%time
+%cd /content/yolov5/
+!python train.py --img 416 --batch 16 --epochs 100 --data {dataset.location}/data.yaml --cfg ./models/custom_yolov5s.yaml --weights '' --name yolov5s_results  --cache
+
+# we can also output some older school graphs if the tensor board isn't working for whatever reason... 
+from utils.plots import plot_results  # plot results.txt as results.png
+Image(filename='/content/yolov5/runs/train/yolov5s_results/results.png', width=1000)  # view results.png
+
+# first, display our ground truth data
+print("GROUND TRUTH TRAINING DATA:")
+Image(filename='/content/yolov5/runs/train/yolov5s_results/test_batch0_labels.jpg', width=900)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
